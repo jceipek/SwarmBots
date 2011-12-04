@@ -9,6 +9,7 @@
 #define RMOT_1 10
 
 #define LENC 4
+#define RENC 3
 
 void setup(){
   
@@ -21,8 +22,8 @@ void setup(){
 
   Mirf.spi = &MirfHardwareSpi;
   Mirf.init();
-  Mirf.setRADDR((byte *)"LB0");
-  Mirf.payload = 2;
+  Mirf.setRADDR((byte *)"clie1");
+  Mirf.payload = 3;
   
   Mirf.config();
   
@@ -56,21 +57,26 @@ void rightWheelOff() {
 
 void loop(){
   
-  byte cmd[2];
-  Mirf.setTADDR((byte *)"comp");
+  byte cmd[12];
+  Mirf.setTADDR((byte *)"serv1");
   
   //while(Mirf.isSending()){
   //  Serial.println("Sending");
   //}
   //Serial.println("Finished sending");
   
-  //while(!Mirf.dataReady()){
-  //  Serial.println("Data Not Ready");
-  //}
+  //Mirf.getData((byte *) &cmd);
+  while(!Mirf.dataReady()){
+    //Serial.println("Data Not Ready");
+      //digitalWrite(LMOT_0, LOW);
+      //digitalWrite(LMOT_1, LOW);
+      //digitalWrite(RMOT_0, LOW);
+      //digitalWrite(RMOT_1, LOW);
+  }
   Mirf.getData((byte *) &cmd);
   
-  Serial.println((int)cmd[0]);
-  Serial.println((int)cmd[1]);
+  Serial.print(cmd[0]);
+  Serial.println(cmd[1]);
   
   if (cmd[0] == 'A') {
     leftWheel(true);
@@ -78,11 +84,13 @@ void loop(){
     leftWheelOff();
   }
   
-  if (cmd[1] == 'B') {
+  /*if (cmd[1] == 'B') {
     rightWheel(true);
   } else {
     rightWheelOff();
-  }
+  }*/
+  Serial.println("Hey, Guys");
+  //delay(2000);
 
 
 } 

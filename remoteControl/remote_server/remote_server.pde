@@ -31,9 +31,9 @@ void recv() {
 }
 
 void loop(){
-  byte sendData[2];
+  byte sendData[] = "BB";
   
-  Mirf.setTADDR((byte *)"LB0");
+  Mirf.setTADDR((byte *)"lb0");
   sendData[0] = 'A';
   sendData[1] = 'A';
   Mirf.send((byte *)&sendData);
