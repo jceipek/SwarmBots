@@ -1,3 +1,7 @@
 .*.swp
+.*.swo
 .DS_Store
-
+case_study/*.aux
+case_study/*.log
+case_study/*.out
+case_study/*.*.gz
