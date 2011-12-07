@@ -8,7 +8,7 @@
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 
-//#define MANUAL_MOVE
+#define MANUAL_MOVE
 
 // Begin Motor Macros
   #define LMOT_0 5
@@ -75,6 +75,9 @@ void rightWheelOff() {
   int rEncoder = 0;
   boolean lEncPrev;
   boolean rEncPrev;
+  float posX = 0.0f;
+  float posY = 0.0f;
+  double angle = 0.0f;
 
   int pathCounter = 0;
   int pathLen = 2;
@@ -97,6 +100,7 @@ void setup() {
 }
 
 void updateEncoders() {
+  boolean shouldSend = false;
   boolean temp = digitalRead(LENC);
   if (lEncPrev != temp) {
     lEncPrev = temp;
@@ -109,7 +113,7 @@ void updateEncoders() {
     #else
       lEncoder ++;
     #endif
-    sendEncoderVals();
+      shouldSend = true;
     }
   }
   temp = digitalRead(RENC);
@@ -124,9 +128,16 @@ void updateEncoders() {
       #else
         rEncoder ++;
       #endif
-      sendEncoderVals();
+        shouldSend = true;
     }
-  }  
+  }
+  if (shouldSend) {
+    sendEncoderVals();
+  }
+}
+
+void updateGlobalPos() {
+    
 }
 
 void sendEncoderVals() {
@@ -143,8 +154,8 @@ void loop() {
     lastTime = millis();
     pathCounter++;
     pathCounter%=pathLen;
-    leftWheel(pathL[pathCounter]);
-    rightWheel(pathR[pathCounter]);
+    //leftWheel(pathL[pathCounter]);
+    //rightWheel(pathR[pathCounter]);
   }
 
   updateEncoders();

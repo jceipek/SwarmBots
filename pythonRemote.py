@@ -1,6 +1,7 @@
 import pygame
 import serial
 import math
+from multiprocessing import Process, Queue, Pipe
 
 class Vect(object):
   def __init__(self, x, y):
@@ -163,38 +164,65 @@ class Robot(object):
 
 
 class SerialReader(object):
-  def __init__(self, port='/dev/tty.usbmodem411',timeout=1):
-    self._ser = serial.Serial(port, 9600, timeout=timeout)
+  def __init__(self, port='/dev/tty.usbmodem411'):
+    self._port = port
     self.lEnc = 0
     self.rEnc = 0
 
+  def run(self):
+    print "Running"
+    self._queue = Queue()
+    receiver,sender = Pipe(False)
+    self._procTerm = sender
+    self._proc = Process(target=self.monitor,args=(receiver,))
+    self._proc.start()
+
   def readEncVals(self):
-    temp = self._ser.readline()
-    #print temp
-    try:
-      if temp[0] == '(' and temp[-3:-1] == ')\r':
-        temp = temp[1:len(temp)-3].split(',')
-        self.lEnc = int(temp[0])
-        self.rEnc = int(temp[1])
-        #print "Transl:",self.lEnc,self.rEnc
-      #return 0.0,0.0
-    except:
-      pass
+    if not self._queue.empty():
+      try:
+        tup = self._queue.get(timeout=1)
+      except Exception as e:
+        print "Read err"
+        print e
+      self.lEnc,self.rEnc = tup
     return self.lEnc,self.rEnc
 
-  def close(self):
+  def monitor(self,closePipe):
+    self._ser = serial.Serial(self._port, 9600,timeout=1)  
+    self._running = True
+    #print temp
+    while self._running:
+      if closePipe.poll():
+        self._running = False
+      try:
+        temp = self._ser.readline() 
+        if temp[0] == '(' and temp[-3:-1] == ')\r':
+          temp = temp[1:len(temp)-3].split(',')
+          lEnc = int(temp[0])
+          rEnc = int(temp[1])
+          self._queue.put((lEnc,rEnc))
+          #print "Transl:",self.lEnc,self.rEnc
+        #return 0.0,0.0
+      except Exception as e:
+        print e
+      #return self.lEnc,self.rEnc
     self._ser.close()
+
+  def close(self):
+    self._procTerm.send(1)
 
 
 pygame.init()
 screen = pygame.display.set_mode(Vect(1000,800))
+pygame.key.set_repeat(50, 5)
 running = True
 
 
 reader = SerialReader()
+reader.run()
 lb0 = Robot()
 
-scale = 10.0
+scale = 1.0
 
 clock = pygame.time.Clock()
 l,r = 0,0
@@ -214,9 +242,9 @@ while running:
       elif event.key == pygame.K_RIGHT:
         print "-+"
       elif event.key == pygame.K_MINUS:
-        scale *= 1.01
-      elif event.key == pygame.K_EQUALS:
         scale *= 0.99
+      elif event.key == pygame.K_EQUALS:
+        scale *= 1.01
 
 
     elif event.type == pygame.QUIT:
@@ -233,4 +261,6 @@ while running:
 
   clock.tick(60)
 
+print "Program closed successfully"
 reader.close()
+
