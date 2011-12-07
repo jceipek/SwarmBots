@@ -213,6 +213,11 @@ while running:
         print "+-"
       elif event.key == pygame.K_RIGHT:
         print "-+"
+      elif event.key == pygame.K_MINUS:
+        scale *= 1.01
+      elif event.key == pygame.K_EQUALS:
+        scale *= 0.99
+
 
     elif event.type == pygame.QUIT:
       running = False
