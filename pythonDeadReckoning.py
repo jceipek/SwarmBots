@@ -1,5 +1,5 @@
 '''
-Displays robot position based on dead reckoning computed onboard. 
+Displays robot position based on dead reckoning computed on computer. 
 '''
 
 import pygame
@@ -77,14 +77,6 @@ class Robot(object):
     self.lEnc = 0
     self.rEnc = 0
 
-  def updateAbs(self, x, y, a):
-    self.position.x = x
-    self.position.y = y
-    self.angle = a
-
-    if self.light:
-      self.path.append(Vect(x,y))
-
   def update(self, lEnc, rEnc):
     print (lEnc,rEnc)
     Rw = 17.9
@@ -102,6 +94,68 @@ class Robot(object):
     self.position += Vect(dx,dy)
     self.angle += dTheta
 
+    """
+    h1 = lEnc-self.lEnc
+    h2 = rEnc-self.rEnc
+
+    print h1,h2
+
+    w = 12.0 #Robot Width
+
+    dist = (h1+h2)/2.0
+
+    PREC = 0.0000001
+
+    if abs(h1-h2) <= PREC: # Handle cases where robot moves fwd or back perfectly
+      angle = 0.0
+    elif abs(h1) > abs(h2):
+      sign = 
+    elif abs(h1) < abs(h2):
+
+
+    
+    elif h1>=0.0 and h2>=0.0:
+      if h1>h2:
+        inside = h1/((w*h1)/(h1-h2)-(w/2.0))
+        angle = inside/abs(inside)*math.asin(abs(inside))
+      else:
+        inside = h2/((w*h2)/(h2-h1)-(w/2.0))
+        angle = -1*inside/abs(inside)*math.asin(abs(inside))
+    elif h1 < 0 and h2 < 0:
+      if abs(h1)>abs(h2):
+        h1 = abs(h1)
+        h2 = abs(h2)
+        inside = h1/((w*h1)/(h1-h2)-(w/2.0))
+        angle = -1*inside/abs(inside)*math.asin(abs(inside))
+      else:
+        inside = h2/((w*h2)/(h2-h1)-(w/2.0))
+        angle = -inside/abs(inside)*math.asin(abs(inside))      
+    elif h1 < 0:
+      if abs(h1)>h2:
+        inside = abs(h1)/((w*abs(h1))/(abs(h1)-h2)-(w/2.0))
+        angle = -1*inside/abs(inside)*math.asin(abs(inside))
+      else:
+        inside = h2/((w*h2)/(h2-abs(h1))-(w/2.0))
+        angle = inside/abs(inside)*math.asin(abs(inside))
+    elif h2 < 0:
+      if h1>abs(h2):
+        inside = h1/((w*h1)/(h1-abs(h2))-(w/2.0))
+        angle = -1*inside/abs(inside)*math.asin(abs(inside))
+      else:
+        inside = abs(h2)/((w*abs(h2))/(abs(h2)-h1)-(w/2.0))
+        angle = -inside/abs(inside)*math.asin(abs(inside))
+        """
+      
+
+    #self.angle += angle
+    #self.angle %= 2*math.pi
+
+    #self.lEnc = lEnc
+    #self.rEnc = rEnc
+   
+    #delta = Vect(0,dist).rot(self.angle) 
+
+    #self.position += delta    
     if self.light:
       self.path.append(self.position)
 
@@ -120,10 +174,6 @@ class SerialReader(object):
     self.lEnc = 0
     self.rEnc = 0
 
-    self.posX = 0;
-    self.posY = 0;
-    self.angle = 0;
-
   def run(self):
     print "Running"
     self._queue = Queue()
@@ -132,15 +182,15 @@ class SerialReader(object):
     self._proc = Process(target=self.monitor,args=(receiver,))
     self._proc.start()
 
-  def readPosVals(self):
+  def readEncVals(self):
     if not self._queue.empty():
       try:
         tup = self._queue.get(timeout=1)
       except Exception as e:
         print "Read err"
         print e
-      self.posX,self.posY,self.angle = tup
-    return self.posX,self.posY,self.angle
+      self.lEnc,self.rEnc = tup
+    return self.lEnc,self.rEnc
 
   def monitor(self,closePipe):
     self._ser = serial.Serial(self._port, 9600,timeout=1)  
@@ -150,21 +200,15 @@ class SerialReader(object):
       if closePipe.poll():
         self._running = False
       try:
-        orig = self._ser.readline()
-        temp = orig[orig.find('(')+1:]
-        temp = temp[:temp.find(')')]
-        temp = temp.strip()
-        if temp.count(',') == 2:
-          temp = temp.split(',')
-          x = int(temp[0])
-          y = int(temp[1])
-          a = int(temp[2]) 
-          print (x,y,a)
-          self._queue.put((x,y,a*math.pi/180.0))
+        temp = self._ser.readline() 
+        if temp[0] == '(' and temp[-3:-1] == ')\r':
+          temp = temp[1:len(temp)-3].split(',')
+          lEnc = int(temp[0])
+          rEnc = int(temp[1])
+          self._queue.put((lEnc,rEnc))
           #print "Transl:",self.lEnc,self.rEnc
         #return 0.0,0.0
       except Exception as e:
-        print orig, temp
         print e
       #return self.lEnc,self.rEnc
     self._ser.close()
@@ -184,8 +228,6 @@ reader.run()
 lb0 = Robot()
 
 scale = 1.0
-panspeed = 20.0
-offset = Vect(600,600)
 
 clock = pygame.time.Clock()
 l,r = 0,0
@@ -195,15 +237,6 @@ while running:
 
       if event.key == pygame.K_ESCAPE:
         running = False
-
-      elif event.key == pygame.K_w:
-        offset.y -= scale*panspeed
-      elif event.key == pygame.K_s:
-        offset.y += scale*panspeed
-      elif event.key == pygame.K_a:
-        offset.x -= scale*panspeed
-      elif event.key == pygame.K_d:
-        offset.x += scale*panspeed
 
       elif event.key == pygame.K_UP:
         print '++'
@@ -222,12 +255,12 @@ while running:
     elif event.type == pygame.QUIT:
       running = False
 
-  x,y,a = reader.readPosVals()
-  lb0.updateAbs(x,y,a)
+  l,r = reader.readEncVals()
+  lb0.update(l,r)
   #l+=1.0
   #r+=1.0
   screen.fill((0,0,0))
-  lb0.draw(screen, scale, Vect(-300*scale,-300*scale)+offset)
+  lb0.draw(screen, scale, Vect(-300*scale+300,-300*scale+300))
 
   pygame.display.flip()
 

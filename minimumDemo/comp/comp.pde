@@ -8,13 +8,15 @@
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 
+#define PACKET_SIZE 25
+
 void setupMirf() {
   Serial.begin(9600);
   
   Mirf.spi = &MirfHardwareSpi;
   Mirf.init();
   Mirf.setRADDR((byte *)"mastr");
-  Mirf.payload = 14;
+  Mirf.payload = PACKET_SIZE;
   
   Mirf.config();
 }

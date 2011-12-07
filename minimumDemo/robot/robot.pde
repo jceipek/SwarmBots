@@ -10,6 +10,12 @@
 
 #define MANUAL_MOVE
 
+#define RW 17.9
+#define D 12.0
+#define TR 12.0
+
+#define PACKET_SIZE 25
+
 // Begin Motor Macros
   #define LMOT_0 5
   #define LMOT_1 6
@@ -45,7 +51,7 @@ void setupMirf() {
   Mirf.spi = &MirfHardwareSpi;
   Mirf.init();
   Mirf.setRADDR((byte *)"lbot0");
-  Mirf.payload = 14;
+  Mirf.payload = PACKET_SIZE;
   
   Mirf.config();
 }
@@ -78,12 +84,19 @@ void rightWheelOff() {
   float posX = 0.0f;
   float posY = 0.0f;
   double angle = 0.0f;
+  int T1,T2;
+  
 
   int pathCounter = 0;
   int pathLen = 2;
   boolean pathL[] = {true,false};
   boolean pathR[] = {true,false};
   int timePath[] = {5000.0,5000.0};
+
+  int dataRefreshes = 0; //Used to make integration be more averaged
+
+  unsigned long updateTX = 0.0;
+  unsigned long updateTY = 0.0;
 
   unsigned long lastTime = 0.0;
   unsigned long timer = 0.0;
@@ -108,11 +121,17 @@ void updateEncoders() {
     #ifndef MANUAL_MOVE
       if (digitalRead(LMOT_0) && !digitalRead(LMOT_1))
         lEncoder ++;
+        T1 ++;
       else if (!digitalRead(LMOT_0) && digitalRead(LMOT_1))
         lEncoder --;
+        T1 --;
     #else
       lEncoder ++;
+      T1 ++;
     #endif
+      Serial.print("leftWheel: ");
+      Serial.println(millis() - updateTX);
+      updateTX = millis();
       shouldSend = true;
     }
   }
@@ -123,29 +142,67 @@ void updateEncoders() {
       #ifndef MANUAL_MOVE
         if (digitalRead(RMOT_0) && !digitalRead(RMOT_1))
           rEncoder ++;
+          T2 ++;
         else if (!digitalRead(RMOT_0) && digitalRead(RMOT_1))
           rEncoder --;
+          T2 --;
       #else
         rEncoder ++;
+        T2 ++;
       #endif
+        Serial.print("rightWheel: ");
+        Serial.println(millis() - updateTY);
+        updateTY = millis();
         shouldSend = true;
     }
   }
   if (shouldSend) {
-    sendEncoderVals();
+    dataRefreshes ++;
+    dataRefreshes %= 1;
+    if (!dataRefreshes) {
+      updateGlobalPos();
+      sendGlobalPosVals();
+    }
+    //sendEncoderVals();
   }
 }
 
-void updateGlobalPos() {
-    
+void updateGlobalPos() {  
+  posX += RW*cos(angle)*float(T1+T2)*(PI/TR);
+  posY += RW*sin(angle)*float(T1+T2)*(PI/TR);
+  angle += 2.0*PI*RW/D*float(T1-T2)/TR;
+  T1 = 0;
+  T2 = 0;
+}
+
+void sendGlobalPosVals() {
+   if (!Mirf.isSending()) {
+    String posData = String("(" + String((int)posX) + "," + String((int)posY) + "," + String((int)(angle*180.0/PI)) + ")");
+    //Serial.println(posData);
+
+    /*
+    Serial.print("(");
+    Serial.print(posX);
+    Serial.print(",");
+    Serial.print(posY);
+    Serial.print(",");
+    Serial.print(angle);
+    Serial.println(")");
+    */
+
+    char data[PACKET_SIZE];
+    posData.toCharArray(data, PACKET_SIZE);
+    Mirf.send((byte*)data);  
+  }
 }
 
 void sendEncoderVals() {
    if (!Mirf.isSending()) {
     String encoderData = String("(" + String(lEncoder) + "," + String(rEncoder) + ")");
-    char data[14];
-    encoderData.toCharArray(data, 14);
-    Mirf.send((byte*)data);  
+    char data[PACKET_SIZE];
+    encoderData.toCharArray(data, PACKET_SIZE);
+    Mirf.send((byte*)data); 
+    Serial.println(encoderData); 
   }
 }
 
@@ -164,7 +221,6 @@ void loop() {
   //while(!Mirf.dataReady()){}
   //Mirf.getData((byte *) &cmd);
     
-  Serial.println("(" + String(lEncoder) + "," + String(rEncoder) + ")");
 
 } 
   
