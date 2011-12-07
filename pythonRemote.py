@@ -76,19 +76,46 @@ class Robot(object):
 
     h1 = lEnc-self.lEnc
     h2 = rEnc-self.rEnc
-    w = 1.0 #Robot Width
+
+    print h1,h2
+
+    w = 12.0 #Robot Width
 
     dist = (h1+h2)/2.0
 
     if abs(h1-h2) <= 0.0000001:
       angle = 0.0
-    else:
-      if h1<h2:
+    elif h1>=0.0 and h2>=0.0:
+      if h1>h2:
         inside = h1/((w*h1)/(h1-h2)-(w/2.0))
         angle = inside/abs(inside)*math.asin(abs(inside))
       else:
         inside = h2/((w*h2)/(h2-h1)-(w/2.0))
         angle = -1*inside/abs(inside)*math.asin(abs(inside))
+    elif h1 < 0 and h2 < 0:
+      if abs(h1)>abs(h2):
+        h1 = abs(h1)
+        h2 = abs(h2)
+        inside = h1/((w*h1)/(h1-h2)-(w/2.0))
+        angle = -1*inside/abs(inside)*math.asin(abs(inside))
+      else:
+        inside = h2/((w*h2)/(h2-h1)-(w/2.0))
+        angle = -inside/abs(inside)*math.asin(abs(inside))      
+    elif h1 < 0:
+      if abs(h1)>h2:
+        inside = abs(h1)/((w*abs(h1))/(abs(h1)-h2)-(w/2.0))
+        angle = -1*inside/abs(inside)*math.asin(abs(inside))
+      else:
+        inside = h2/((w*h2)/(h2-abs(h1))-(w/2.0))
+        angle = inside/abs(inside)*math.asin(abs(inside))
+    elif h2 < 0:
+      if h1>abs(h2):
+        inside = h1/((w*h1)/(h1-abs(h2))-(w/2.0))
+        angle = -1*inside/abs(inside)*math.asin(abs(inside))
+      else:
+        inside = abs(h2)/((w*abs(h2))/(abs(h2)-h1)-(w/2.0))
+        angle = -inside/abs(inside)*math.asin(abs(inside))
+      
 
     self.angle += angle
     self.angle %= 2*math.pi
@@ -111,19 +138,36 @@ class Robot(object):
     pygame.draw.polygon(surf, (255,255,255), verts, 1)
 
 
-def readEncVals():
-  return 0,0
+class SerialReader(object):
+  def __init__(self, port='/dev/tty.usbmodem411'):
+    self._ser = serial.Serial(port, 9600)
+    self.lEnc = 0
+    self.rEnc = 0
 
-#ser = serial.Serial('/dev/tty.usbserial', 9600) #TODO: Fix this to point to the correct device
+  def readEncVals(self):
+    temp = self._ser.readline()
+    #print temp
+    if temp[0] == '(' and temp[-3:-1] == ')\r':
+      temp = temp[1:len(temp)-3].split(',')
+      self.lEnc = int(temp[0])
+      self.rEnc = int(temp[1])
+      #print "Transl:",self.lEnc,self.rEnc
+    #return 0.0,0.0
+    return self.lEnc/12.0*17.9,self.rEnc/12.0*17.9
+
+  def close(self):
+    self._ser.close()
+
 
 pygame.init()
 screen = pygame.display.set_mode(Vect(1000,800))
 running = True
 
+
+reader = SerialReader()
 lb0 = Robot()
 
-l,r = 0,0
-scale = 5.0
+scale = 10.0
 
 clock = pygame.time.Clock()
 
@@ -146,9 +190,7 @@ while running:
     elif event.type == pygame.QUIT:
       running = False
 
-  #l,r = readEncVals()
-  l+=0.95
-  r+=1.0
+  l,r = reader.readEncVals()
   lb0.update(l,r)
 
   screen.fill((0,0,0))
@@ -156,4 +198,6 @@ while running:
 
   pygame.display.flip()
 
-  clock.tick(25)
+  clock.tick(60)
+
+reader.close()

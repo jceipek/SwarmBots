@@ -48,4 +48,11 @@ void loop() {
   leftWheelOff();
   rightWheelOff();
   delay(1000);
+/*
+  digitalWrite(LMOT_0, HIGH);
+  digitalWrite(LMOT_1, LOW);
+
+  digitalWrite(RMOT_0, HIGH);
+  digitalWrite(RMOT_1, LOW);
+  */
 }
