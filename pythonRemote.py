@@ -73,7 +73,22 @@ class Robot(object):
     self.rEnc = 0
 
   def update(self, lEnc, rEnc):
+    print (lEnc,rEnc)
+    Rw = 17.9
+    T1,T2 = lEnc-self.lEnc,rEnc-self.rEnc
+    D = 12.0
+    TR = 12.0
 
+    self.lEnc,self.rEnc = lEnc,rEnc
+
+    dTheta = (2*math.pi)*(Rw/D)*(T1-T2)/TR
+    dx = Rw*math.cos(self.angle)*(T1+T2)*(math.pi/TR)
+    dy = Rw*math.sin(self.angle)*(T1+T2)*(math.pi/TR)
+    
+    self.position += Vect(dx,dy)
+    self.angle += dTheta
+
+    """
     h1 = lEnc-self.lEnc
     h2 = rEnc-self.rEnc
 
@@ -83,8 +98,16 @@ class Robot(object):
 
     dist = (h1+h2)/2.0
 
-    if abs(h1-h2) <= 0.0000001:
+    PREC = 0.0000001
+
+    if abs(h1-h2) <= PREC: # Handle cases where robot moves fwd or back perfectly
       angle = 0.0
+    elif abs(h1) > abs(h2):
+      sign = 
+    elif abs(h1) < abs(h2):
+
+
+    
     elif h1>=0.0 and h2>=0.0:
       if h1>h2:
         inside = h1/((w*h1)/(h1-h2)-(w/2.0))
@@ -115,17 +138,18 @@ class Robot(object):
       else:
         inside = abs(h2)/((w*abs(h2))/(abs(h2)-h1)-(w/2.0))
         angle = -inside/abs(inside)*math.asin(abs(inside))
+        """
       
 
-    self.angle += angle
-    self.angle %= 2*math.pi
+    #self.angle += angle
+    #self.angle %= 2*math.pi
 
-    self.lEnc = lEnc
-    self.rEnc = rEnc
+    #self.lEnc = lEnc
+    #self.rEnc = rEnc
    
-    delta = Vect(0,dist).rot(self.angle) 
+    #delta = Vect(0,dist).rot(self.angle) 
 
-    self.position += delta    
+    #self.position += delta    
     if self.light:
       self.path.append(self.position)
 
@@ -139,21 +163,24 @@ class Robot(object):
 
 
 class SerialReader(object):
-  def __init__(self, port='/dev/tty.usbmodem411'):
-    self._ser = serial.Serial(port, 9600)
+  def __init__(self, port='/dev/tty.usbmodem411',timeout=1):
+    self._ser = serial.Serial(port, 9600, timeout=timeout)
     self.lEnc = 0
     self.rEnc = 0
 
   def readEncVals(self):
     temp = self._ser.readline()
     #print temp
-    if temp[0] == '(' and temp[-3:-1] == ')\r':
-      temp = temp[1:len(temp)-3].split(',')
-      self.lEnc = int(temp[0])
-      self.rEnc = int(temp[1])
-      #print "Transl:",self.lEnc,self.rEnc
-    #return 0.0,0.0
-    return self.lEnc/12.0*17.9,self.rEnc/12.0*17.9
+    try:
+      if temp[0] == '(' and temp[-3:-1] == ')\r':
+        temp = temp[1:len(temp)-3].split(',')
+        self.lEnc = int(temp[0])
+        self.rEnc = int(temp[1])
+        #print "Transl:",self.lEnc,self.rEnc
+      #return 0.0,0.0
+    except:
+      pass
+    return self.lEnc,self.rEnc
 
   def close(self):
     self._ser.close()
@@ -170,7 +197,7 @@ lb0 = Robot()
 scale = 10.0
 
 clock = pygame.time.Clock()
-
+l,r = 0,0
 while running:
   for event in pygame.event.get():
     if event.type == pygame.KEYDOWN:
@@ -192,7 +219,8 @@ while running:
 
   l,r = reader.readEncVals()
   lb0.update(l,r)
-
+  #l+=1.0
+  #r+=1.0
   screen.fill((0,0,0))
   lb0.draw(screen, scale, Vect(-300*scale+300,-300*scale+300))
 

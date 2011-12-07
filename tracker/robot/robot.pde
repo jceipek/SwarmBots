@@ -143,8 +143,8 @@ void loop() {
     lastTime = millis();
     pathCounter++;
     pathCounter%=pathLen;
-    leftWheel(pathL[pathCounter]);
-    rightWheel(pathR[pathCounter]);
+    //leftWheel(pathL[pathCounter]);
+    //rightWheel(pathR[pathCounter]);
   }
 
   updateEncoders();
