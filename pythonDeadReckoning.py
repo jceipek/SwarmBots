@@ -94,58 +94,6 @@ class Robot(object):
     self.position += Vect(dx,dy)
     self.angle += dTheta
 
-    """
-    h1 = lEnc-self.lEnc
-    h2 = rEnc-self.rEnc
-
-    print h1,h2
-
-    w = 12.0 #Robot Width
-
-    dist = (h1+h2)/2.0
-
-    PREC = 0.0000001
-
-    if abs(h1-h2) <= PREC: # Handle cases where robot moves fwd or back perfectly
-      angle = 0.0
-    elif abs(h1) > abs(h2):
-      sign = 
-    elif abs(h1) < abs(h2):
-
-
-    
-    elif h1>=0.0 and h2>=0.0:
-      if h1>h2:
-        inside = h1/((w*h1)/(h1-h2)-(w/2.0))
-        angle = inside/abs(inside)*math.asin(abs(inside))
-      else:
-        inside = h2/((w*h2)/(h2-h1)-(w/2.0))
-        angle = -1*inside/abs(inside)*math.asin(abs(inside))
-    elif h1 < 0 and h2 < 0:
-      if abs(h1)>abs(h2):
-        h1 = abs(h1)
-        h2 = abs(h2)
-        inside = h1/((w*h1)/(h1-h2)-(w/2.0))
-        angle = -1*inside/abs(inside)*math.asin(abs(inside))
-      else:
-        inside = h2/((w*h2)/(h2-h1)-(w/2.0))
-        angle = -inside/abs(inside)*math.asin(abs(inside))      
-    elif h1 < 0:
-      if abs(h1)>h2:
-        inside = abs(h1)/((w*abs(h1))/(abs(h1)-h2)-(w/2.0))
-        angle = -1*inside/abs(inside)*math.asin(abs(inside))
-      else:
-        inside = h2/((w*h2)/(h2-abs(h1))-(w/2.0))
-        angle = inside/abs(inside)*math.asin(abs(inside))
-    elif h2 < 0:
-      if h1>abs(h2):
-        inside = h1/((w*h1)/(h1-abs(h2))-(w/2.0))
-        angle = -1*inside/abs(inside)*math.asin(abs(inside))
-      else:
-        inside = abs(h2)/((w*abs(h2))/(abs(h2)-h1)-(w/2.0))
-        angle = -inside/abs(inside)*math.asin(abs(inside))
-        """
-      
 
     #self.angle += angle
     #self.angle %= 2*math.pi

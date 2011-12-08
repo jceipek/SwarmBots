@@ -151,6 +151,7 @@ class SerialReader(object):
         self._running = False
       try:
         orig = self._ser.readline()
+        print orig
         temp = orig[orig.find('(')+1:]
         temp = temp[:temp.find(')')]
         temp = temp.strip()

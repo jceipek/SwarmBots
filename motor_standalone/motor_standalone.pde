@@ -39,15 +39,15 @@ void rightWheelOff() {
 }
 
 void loop() {
-  leftWheel(true);
-  rightWheel(true);
-  delay(1000);
+  leftWheel(false);
+  rightWheel(false);
+  /*delay(1000);
   leftWheel(false);
   rightWheel(false);  
   delay(1000);
   leftWheelOff();
   rightWheelOff();
-  delay(1000);
+  delay(1000);*/
 /*
   digitalWrite(LMOT_0, HIGH);
   digitalWrite(LMOT_1, LOW);
