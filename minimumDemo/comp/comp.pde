@@ -36,6 +36,7 @@ void recv() {
   if(Mirf.dataReady()){
     Mirf.getData((byte *)&data);
     Serial.println((char*)data); 
+    //delay(50);
   }
 }
 

@@ -158,12 +158,12 @@ void updateEncoders() {
   }
   if (shouldSend) {
     dataRefreshes ++;
-    dataRefreshes %= 1;
+    dataRefreshes %= 5;
     if (!dataRefreshes) {
       updateGlobalPos();
-      sendGlobalPosVals();
+      //sendGlobalPosVals();
     }
-    //sendEncoderVals();
+    sendEncoderVals();
   }
 }
 
