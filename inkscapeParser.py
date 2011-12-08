@@ -1,7 +1,7 @@
 import pygame
 from BeautifulSoup import BeautifulSoup
 
-f = open('lb.svg')
+f = open('lb2.svg')
 
 txt = f.read()
 soup = BeautifulSoup(txt, selfClosingTags=['defs','sodipodi:namedview'])
@@ -27,6 +27,8 @@ def parsePoint(p,lastPoint,offset=(0,0)):
       controlChar = 'l'
     elif p[coordI] == 'L':
       controlChar = 'L'
+    elif p[coordI] == 'z':
+      lines.append[lines[0]]
     else:
       p[coordI] = p[coordI].split(',')
       p[coordI] = tuple([float(c) for c in p[coordI]])
@@ -34,8 +36,11 @@ def parsePoint(p,lastPoint,offset=(0,0)):
         lastPoint = (p[coordI][0]+offset[0],p[coordI][1]+offset[1])
         lines.append(lastPoint)
       elif controlChar == 'm' or controlChar == 'l':
-        m = (lastPoint[0]+p[coordI][0],lastPoint[1]+p[coordI][1])
-        lastPoint = m
+        if coordI == 1:
+          lastPoint = (p[coordI][0]+offset[0],p[coordI][1]+offset[1])
+        else:
+          m = (lastPoint[0]+p[coordI][0],lastPoint[1]+p[coordI][1])
+          lastPoint = m
         lines.append(lastPoint)
 
 
@@ -44,8 +49,8 @@ def parsePoint(p,lastPoint,offset=(0,0)):
 
 
 allPoints = []
-lastPoint=(0,0)
 for g in soup.findAll('g'):
+  lastPoint=(0,0)  
   try:
     translate = g['transform']
     translate = translate[len('translate('):-1]
@@ -63,7 +68,7 @@ for g in soup.findAll('g'):
       ltranslate = translate
     currLines = parsePoint(p['d'],lastPoint,offset=ltranslate)
     allPoints.append(currLines)
-    lastPoint = currLines[-1]
+    lastPoint = currLines[1]
     print "LAST PT:",lastPoint
 
 scale = 800.0/height
@@ -96,11 +101,9 @@ while running:
       elif event.key == pygame.K_RIGHT:
         pan[0] += 10
          
-  blah = 0
   for pList in allPoints:
     rPList = [(p[0]*scale+pan[0],p[1]*scale+pan[1]) for p in pList]
-    pygame.draw.lines(screen, (255,(255*blah),0), False, rPList)
-    blah += 1
+    pygame.draw.lines(screen, (255,255,0), False, rPList)
     
 
   pygame.display.flip();

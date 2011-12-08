@@ -16,6 +16,15 @@
      id="defs4">
     <inkscape:path-effect
        effect="spiro"
+       id="path-effect3357" />
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect3353" />
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect3349" />
+    <inkscape:path-effect
+       effect="spiro"
        id="path-effect3775" />
     <inkscape:path-effect
        effect="spiro"
@@ -49,4 +58,8 @@
        id="path3773"
        style="fill:none;stroke:#000000;stroke-width:150;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
   </g>
+  <path
+     d="m 2848.7288,2928.8136 -297.4576,-1967.79665 1098.3051,125.84745 -629.2373,800.8475 823.7288,1006.7796 -995.339,34.3221"
+     id="path3355"
+     style="fill:none;stroke:#000000;stroke-width:71.69999695;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
 </svg>
