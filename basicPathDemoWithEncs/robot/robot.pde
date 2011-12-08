@@ -22,6 +22,8 @@
   #define RENC 3
 // End Encoder Macros
 
+  #define LED 2
+
 void setupMots() {
   pinMode(LMOT_0, OUTPUT);
   pinMode(LMOT_1, OUTPUT);
@@ -77,14 +79,39 @@ void rightWheelOff() {
   boolean rEncPrev;
 
   int pathCounter = 0;
-  int pathLen = 2;
-  boolean pathL[] = {true,false};
-  boolean pathR[] = {true,false};
-  int timePath[] = {5000.0,5000.0};
+  int pathLen = 16;
+  
+  #define RROTATE 0
+  #define LROTATE 1
+  #define MOVE 2
+  #define LIGHT 3
+
+  #define TURN_CIRC PI*12.0
+  #define WHEEL_SEP 12.0
+  #define ENC_COUNT 12.0
+  #define WHEEL_CIRC 17.9
+
+  #define UNIT_DIST 400.0
+  #define QUART PI/2.0
+
+  byte pathBehavior[] = {MOVE,LROTATE,MOVE,LROTATE,MOVE,RROTATE,MOVE,RROTATE,MOVE,LROTATE,MOVE,RROTATE,MOVE,RROTATE,MOVE,LIGHT}; //List of behaviors (ROTATE or MOVE)
+  float pathAmount[] = {UNIT_DIST,QUART,UNIT_DIST*0.75,QUART,  UNIT_DIST,QUART*1.5,UNIT_DIST/2.0,QUART,UNIT_DIST/2.0,QUART,UNIT_DIST/2.0,QUART,UNIT_DIST/2.0,QUART*1.5,UNIT_DIST/2.0,0.0}; // List of angles (in radians) or distances to travel (in cm)
 
   unsigned long lastTime = 0.0;
-  unsigned long timer = 0.0;
 // End Global Var Defs
+
+boolean hasCoveredDist(float dist) {
+  return (abs(lEncoder)+abs(rEncoder)/2.0)*WHEEL_CIRC >= dist;
+}
+
+boolean hasTurnedAngle(float radAngle) {
+  return (abs(lEncoder)+abs(rEncoder))/2.0 >= (radAngle/(2.0*PI)*TURN_CIRC)/(WHEEL_CIRC/ENC_COUNT);
+}
+
+void resetEncs() {
+  lEncoder = 0;
+  rEncoder = 0;
+}
 
 void setup() {
   setupMirf();
@@ -93,6 +120,9 @@ void setup() {
 
   Mirf.setTADDR((byte *)"mastr");
 
+
+  pinMode(LED,OUTPUT);
+  digitalWrite(LED,HIGH);
   Serial.println("Beginning ... "); 
 }
 
@@ -139,12 +169,38 @@ void sendEncoderVals() {
 }
 
 void loop() {
-  if ((millis()-lastTime) > timePath[pathCounter]) {
-    lastTime = millis();
-    pathCounter++;
-    pathCounter%=pathLen;
-    //leftWheel(pathL[pathCounter]);
-    //rightWheel(pathR[pathCounter]);
+
+  if (pathCounter < pathLen) {
+    if (pathBehavior[pathCounter] == LROTATE) {
+      leftWheel(false);
+      rightWheel(true);
+      if(hasTurnedAngle(pathAmount[pathCounter])) {
+        resetEncs();
+        leftWheelOff();
+        rightWheelOff();
+        pathCounter++;
+      } 
+    } else if (pathBehavior[pathCounter] == RROTATE) {
+      leftWheel(true);
+      rightWheel(false);
+      if(hasTurnedAngle(pathAmount[pathCounter])) {
+        resetEncs();
+        leftWheelOff();
+        rightWheelOff();
+        pathCounter++;
+      } 
+    } else if (pathBehavior[pathCounter] == MOVE) {
+      leftWheel(false);
+      rightWheel(false);
+      if(hasCoveredDist(pathAmount[pathCounter])) {
+        resetEncs();
+        leftWheelOff();
+        rightWheelOff();
+        pathCounter++;
+      }
+    } else if (pathBehavior[pathCounter] == LIGHT) {
+      digitalWrite(LED,int(pathAmount[pathCounter]));
+    }
   }
 
   updateEncoders();
