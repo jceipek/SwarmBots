@@ -1,15 +1,17 @@
 import pygame
-from BeautifulSoup import BeautifulSoup
+from BeautifulSoup import BeautifulStoneSoup
+import BeautifulSoup
 
-f = open('lb2.svg')
+f = open('lightBot.svg')
+o = open('output.pde','w')
 
 txt = f.read()
-soup = BeautifulSoup(txt, selfClosingTags=['defs','sodipodi:namedview'])
+soup = BeautifulStoneSoup(txt, selfClosingTags=['defs','sodipodi:namedview','path'])
 
 #print soup.prettify()
 
-width = float(soup.findAll('svg')[0]['width'])
-height = float(soup.findAll('svg')[0]['height'])
+width = float(soup.find('svg')['width'])
+height = float(soup.find('svg')['height'])
 print width,height
 
 def parsePoint(p,lastPoint,offset=(0,0)):
@@ -44,7 +46,7 @@ def parsePoint(p,lastPoint,offset=(0,0)):
         lines.append(lastPoint)
 
 
-  print lines
+  #print lines
   return lines
 
 
@@ -71,8 +73,58 @@ for g in soup.findAll('g'):
     lastPoint = currLines[1]
     print "LAST PT:",lastPoint
 
-scale = 800.0/height
+'''
+print "HERE"
+stuff = [(tag.find('<path'),str(tag)) for tag in soup.find('svg')]
+for i in stuff:
+  print i
+'''
 
+for p in soup.find('svg').findNextSiblings('path'):
+  print "PATHS ARE HURR"
+  try:
+    ltranslate = p['transform']
+    ltranslate = ltranslate[len('translate('):-1]
+    ltranslate = ltranslate.split(',')
+    ltranslate = float(ltranslate[0])+float(translate[0]),float(ltranslate[1])+float(translate[1])
+  except KeyError:
+    ltranslate = translate
+  currLines = parsePoint(p['d'],lastPoint,offset=ltranslate)
+  allPoints.append(currLines)
+
+
+
+scale = 800.0/height
+turnOffListVals = [str(len(pList)) for pList in allPoints]
+xListCoords = []
+yListCoords = []
+
+for pList in allPoints:
+  rPList = [(p[0]*scale,p[1]*scale) for p in pList]
+  xListCoords.extend([str(r[0]) for r in rPList])
+  yListCoords.extend([str(r[1]) for r in rPList])
+
+o.write("int pathLen = ")
+o.write(str(sum([len(pList) for plist in allPoints])))
+o.write(';\n\n')
+
+o.write("byte lightPath[] = {\n  ")
+o.write(',\n  '.join(turnOffListVals))
+o.write("\n};\n\n")
+
+o.write("float xPath[] = {\n  ")
+o.write(',\n  '.join(xListCoords))
+o.write("\n};\n\n")
+
+o.write("float yPath[] = {\n  ")
+o.write(',\n  '.join(yListCoords))
+o.write("\n};\n")
+
+o.close()
+f.close()
+
+
+scale = 800.0/height
 pygame.init()
 
 screen = pygame.display.set_mode((int(width*scale),int(height*scale)))
