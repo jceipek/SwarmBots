@@ -2,8 +2,8 @@ import pygame
 from BeautifulSoup import BeautifulStoneSoup
 import BeautifulSoup
 
-f = open('lightBot.svg')
-o = open('output.pde','w')
+f = open('/Users/jceipek/Desktop/lightbotswords.svg')
+o = open('/Users/jceipek/Desktop/lightbotswords.pde','w')
 
 txt = f.read()
 soup = BeautifulStoneSoup(txt, selfClosingTags=['defs','sodipodi:namedview','path'])
@@ -95,7 +95,7 @@ for p in soup.find('svg').findNextSiblings('path'):
 
 
 scale = 800.0/height
-turnOffListVals = [str(len(pList)) for pList in allPoints]
+turnOffListVals = []
 xListCoords = []
 yListCoords = []
 
@@ -104,8 +104,11 @@ for pList in allPoints:
   xListCoords.extend([str(r[0]) for r in rPList])
   yListCoords.extend([str(r[1]) for r in rPList])
 
+  turnOffListVals.append(str(len(xListCoords)))
+
+
 o.write("int pathLen = ")
-o.write(str(sum([len(pList) for plist in allPoints])))
+o.write(str(len(xListCoords)))
 o.write(';\n\n')
 
 o.write("byte lightPath[] = {\n  ")
