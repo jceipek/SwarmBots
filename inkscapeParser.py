@@ -2,8 +2,8 @@ import pygame
 from BeautifulSoup import BeautifulStoneSoup
 import BeautifulSoup
 
-f = open('/Users/jceipek/Desktop/lightbotswords.svg')
-o = open('/Users/jceipek/Desktop/lightbotswords.pde','w')
+f = open('/Users/jceipek/Desktop/Abst.svg')
+o = open('/Users/jceipek/Desktop/Abst.pde','w')
 
 txt = f.read()
 soup = BeautifulStoneSoup(txt, selfClosingTags=['defs','sodipodi:namedview','path'])
@@ -30,7 +30,7 @@ def parsePoint(p,lastPoint,offset=(0,0)):
     elif p[coordI] == 'L':
       controlChar = 'L'
     elif p[coordI] == 'z':
-      lines.append[lines[0]]
+      lines.append(lines[0])
     else:
       p[coordI] = p[coordI].split(',')
       p[coordI] = tuple([float(c) for c in p[coordI]])
